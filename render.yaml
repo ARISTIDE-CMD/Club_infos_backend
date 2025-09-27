@@ -1,0 +1,4 @@
+composer install --no-dev --optimize-autoloader
+yarn install
+yarn build
+php artisan migrate --force
