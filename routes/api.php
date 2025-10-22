@@ -7,7 +7,7 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SubmissionController;
-
+use App\Http\Controllers\EvaluationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,5 +44,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Submission routes (for students)
     Route::post('/submissions', [SubmissionController::class, 'store']); // New route for student project submissions
+    Route::get('/download/{filename}', [SubmissionController::class, 'downloadFile']);
+     Route::post('/submissions/{submission}/evaluate', [EvaluationController::class, 'storeOrUpdate']);
 });
-        Route::get('/submissions/{id}/download', [SubmissionController::class, 'download']);
+Route::get('/download/{path}', [SubmissionController::class, 'downloadFile'])
+    ->where('path', '.*') // Ceci dit à Laravel d'accepter TOUS les caractères (y compris les slashes) dans le paramètre {path}
+    ->name('download.submission');

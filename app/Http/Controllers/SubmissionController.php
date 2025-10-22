@@ -17,7 +17,8 @@ class SubmissionController extends Controller
         // Récupère toutes les soumissions avec les relations nécessaires
         $submissions = Submission::with([
             'project.students.user', // Récupère le projet + ses étudiants + leurs infos user
-            'student.user' // Récupère l'étudiant qui a soumis le fichier
+            'student.user', // Récupère l'étudiant qui a soumis le fichier
+            'evaluation' // Récupère l'évaluation et l'admin qui a évalué
         ])->get();
 
         return response()->json([
@@ -68,14 +69,33 @@ class SubmissionController extends Controller
 
 public function download(Submission $submission)
 {
-    $filePath = storage_path('app/public/' . $submission->file_path);
+    if (!$submission->file_path) {
+        abort(404, 'Pas de fichier associé à cette soumission.');
+    }
+
+    $filePath = storage_path('app/public/' . ltrim($submission->file_path, '/'));
 
     if (!file_exists($filePath)) {
-        abort(404);
+        abort(404, 'Fichier introuvable sur le serveur : ' . $filePath);
     }
 
     return response()->download($filePath);
 }
+
+public function downloadFile($filename)
+{
+    $filePath = storage_path('app/public/' . $filename);
+
+    // Vérifie que le fichier existe
+    if (!file_exists($filePath)) {
+        abort(404, 'Fichier introuvable sur le serveur.');
+    }
+
+    return response()->download($filePath);
+}
+
+
+
 
 
 }

@@ -37,5 +37,11 @@ class Submission extends Model
     {
         return $this->belongsTo(Project::class);
     }
+    // Exemple dans Submission.php
+public function evaluation()
+{
+    return $this->hasOne(Evaluation::class);
+}
+
 }
 
