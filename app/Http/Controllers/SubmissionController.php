@@ -39,33 +39,56 @@ class SubmissionController extends Controller
     /**
      * Enregistre une nouvelle soumission de projet par un étudiant.
      */
-    public function store(Request $request)
-    {
-        // 1. Validation de la requête
-        $request->validate([
-            'project_id' => 'required|exists:projects,id',
-            'file' => 'required|file|max:10240', // Fichier requis, taille max de 10 Mo
-        ]);
+public function store(Request $request)
+{
+    // 1️⃣ Validation de la requête
+    $request->validate([
+        'project_id' => 'required|exists:projects,id',
+        'file' => 'required|file|max:10240', // max 10 Mo
+    ]);
 
-        // Vérifier si l'utilisateur est un étudiant
-        if ($request->user()->role !== 'student') {
-            return response()->json(['message' => 'Non autorisé.'], 403);
+    // 2️⃣ Vérification du rôle
+    if ($request->user()->role !== 'student') {
+        return response()->json(['message' => 'Non autorisé.'], 403);
+    }
+
+    $projectId = $request->input('project_id');
+
+    // 3️⃣ Vérifier s’il existe déjà une soumission pour ce projet
+    $existingSubmission = Submission::where('project_id', $projectId)->first();
+
+    // 4️⃣ Enregistrer le nouveau fichier
+    $filePath = $request->file('file')->store('submissions', 'public');
+
+    if ($existingSubmission) {
+        // Supprimer l'ancien fichier si présent
+        if ($existingSubmission->file_path && \Storage::disk('public')->exists($existingSubmission->file_path)) {
+            \Storage::disk('public')->delete($existingSubmission->file_path);
         }
 
-        // 2. Stockage du fichier sur le serveur
-        $filePath = $request->file('file')->store('submissions', 'public');
-
-        // 3. Enregistrement de la soumission dans la base de données
-        $submission = Submission::create([
-            'project_id' => $request["project_id"],
+        // Mettre à jour la soumission existante
+        $existingSubmission->update([
             'file_path' => $filePath,
         ]);
 
         return response()->json([
-            'message' => 'Fichier soumis avec succès.',
-            'submission' => $submission
-        ], 201);
+            'message' => 'Soumission mise à jour avec succès.',
+            'submission' => $existingSubmission
+        ], 200);
     }
+
+    // 5️⃣ Sinon, créer une nouvelle soumission
+    $newSubmission = Submission::create([
+        'project_id' => $projectId,
+        'file_path' => $filePath,
+    ]);
+
+    return response()->json([
+        'message' => 'Fichier soumis avec succès.',
+        'submission' => $newSubmission
+    ], 201);
+}
+
 
 public function download(Submission $submission)
 {
@@ -94,6 +117,16 @@ public function downloadFile($filename)
     return response()->download($filePath);
 }
 
+public function show($id)
+{
+    $submission = Submission::with([
+        'student.user',   // si la soumission appartient à un étudiant
+        'project',        // si tu veux le projet lié
+        'evaluations.user' // ⚡ ici on ajoute les évaluations + leur auteur
+    ])->findOrFail($id);
+
+    return response()->json(['submission' => $submission]);
+}
 
 
 

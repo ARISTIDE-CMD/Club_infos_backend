@@ -32,19 +32,33 @@ class StudentController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\JsonResponse
      */
-    public function show($id)
-    {
-        // Find the student with their user and projects data
-        $student = Student::with(['user', 'projects'])->find($id);
+ public function show($id)
+{
+    $student = Student::with([
+        'user',
+        'projects.submission.evaluation' // ✅ relations uniques
+    ])->find($id);
 
-        // Return a 404 response if the student is not found
-        if (!$student) {
-            return response()->json(['message' => 'Étudiant non trouvéeeee'], 404);
-        }
-
-        // Return the student data with a 200 success code
-        return response()->json(['student' => $student], 200);
+    if (!$student) {
+        return response()->json(['message' => 'Étudiant non trouvé'], 404);
     }
+
+    // Comme chaque projet n’a qu’une seule soumission,
+    // on peut récupérer les soumissions sous forme d’objets
+    $submissions = $student->projects->map(function ($project) {
+        return [
+            'project' => $project,
+            'submission' => $project->submission,
+            'evaluation' => $project->submission?->evaluation
+        ];
+    });
+
+    return response()->json([
+        'student' => $student,
+        'submissions' => $submissions,
+    ], 200);
+}
+
 
 // public function show($id)
 // {

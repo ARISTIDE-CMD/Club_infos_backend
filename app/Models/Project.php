@@ -27,4 +27,13 @@ class Project extends Model
     {
         return $this->belongsToMany(Student::class);
     }
+
+    /**
+     * 🔹 Un projet a plusieurs soumissions
+     */
+   public function submission()
+{
+    return $this->hasOne(Submission::class);
+}
+
 }

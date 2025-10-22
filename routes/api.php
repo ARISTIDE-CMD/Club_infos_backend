@@ -37,6 +37,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Project routes
     Route::get('/projects', [ProjectController::class, 'index']);
+     Route::get('/projects/{id}', [ProjectController::class, 'show']);
     Route::get('/results', [SubmissionController::class, 'index']);
     Route::post('/projects', [ProjectController::class, 'store']);
     Route::patch('/projects/{id}', [ProjectController::class, 'update']);

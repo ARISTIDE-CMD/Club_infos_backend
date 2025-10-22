@@ -22,13 +22,25 @@ class ProjectController extends Controller
         $projects = Project::with('students.user')->get();
         return response()->json(['projects' => $projects]);
     }
-    // public function result(){
-    //     $result= Submission::with('students.user')->get();
-    // }
     /**
-     * Store a newly created project in storage.
-     * This method handles both admin-assigned projects and student-submitted projects.
+     * Display the specified project with its relations.
      */
+public function show($id)
+{
+    // On récupère le projet avec toutes ses relations
+    $project = Project::with([
+        'students.user',             // les étudiants et leurs utilisateurs
+        'submissions.student.user',  // les soumissions + étudiant + utilisateur
+        'submissions.evaluations.user' // ⚡ les évaluations + évaluateur
+    ])->findOrFail($id);
+
+    // On renvoie le projet complet au format JSON
+    return response()->json([
+        'project' => $project
+    ]);
+}
+
+
     public function store(Request $request)
     {
         try {
