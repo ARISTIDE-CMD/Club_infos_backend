@@ -8,6 +8,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\EvaluationController;
+use App\Http\Controllers\ProjectMessageController;
 
 /*
 |--------------------------------------------------------------------------
@@ -49,10 +50,15 @@ Route::middleware('auth:sanctum')->group(function () {
      Route::post('/submissions/{submission}/evaluate', [EvaluationController::class, 'storeOrUpdate']);
 
      //Appi pour chater
-         Route::get('/projects/{project}/chat', [ChatController::class, 'showProjectChat']);
+        
     Route::post('/projects/{project}/chat', [ChatController::class, 'sendMessage']);
-});
+     //.....
+     Route::post('/projects/messages', [ProjectMessageController::class, 'store']);
+    });
 Route::get('/download/{path}', [SubmissionController::class, 'downloadFile'])
-    ->where('path', '.*') // Ceci dit à Laravel d'accepter TOUS les caractères (y compris les slashes) dans le paramètre {path}
+->where('path', '.*') // Ceci dit à Laravel d'accepter TOUS les caractères (y compris les slashes) dans le paramètre {path}
     ->name('download.submission');
     Route::get('/students/{id}', [StudentController::class, 'show']);
+    Route::get('/projects/{project}/messages', [ProjectMessageController::class, 'show']);
+    Route::get('/admin/messages', [ProjectMessageController::class, 'index']);
+    //  Route::get('/projects/{project}/chat', [ChatController::class, 'showProjectChat']);
