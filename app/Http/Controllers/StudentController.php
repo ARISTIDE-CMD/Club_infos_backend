@@ -15,7 +15,7 @@ class StudentController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Student::with('user');
+        $query = Student::with(['user','projects.submission.evaluation' ]);
 
         if ($request->has('class_group')) {
             $query->where('class_group', $request->input('class_group'));

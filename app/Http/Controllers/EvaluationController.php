@@ -22,7 +22,7 @@ class EvaluationController extends Controller
 
         // 2. Validation des données de l'évaluation
         $validatedData = $request->validate([
-            'grade' => 'nullable|numeric|min:0|max:100', // Assumant une note sur 100
+            'grade' => 'nullable|numeric|min:0|max:20', // Assumant une note sur 100
             'comment' => 'nullable|string',
         ]);
 

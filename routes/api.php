@@ -51,3 +51,4 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::get('/download/{path}', [SubmissionController::class, 'downloadFile'])
     ->where('path', '.*') // Ceci dit à Laravel d'accepter TOUS les caractères (y compris les slashes) dans le paramètre {path}
     ->name('download.submission');
+    Route::get('/students/{id}', [StudentController::class, 'show']);
