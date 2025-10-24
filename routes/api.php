@@ -47,6 +47,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/submissions', [SubmissionController::class, 'store']); // New route for student project submissions
     Route::get('/download/{filename}', [SubmissionController::class, 'downloadFile']);
      Route::post('/submissions/{submission}/evaluate', [EvaluationController::class, 'storeOrUpdate']);
+
+     //Appi pour chater
+         Route::get('/projects/{project}/chat', [ChatController::class, 'showProjectChat']);
+    Route::post('/projects/{project}/chat', [ChatController::class, 'sendMessage']);
 });
 Route::get('/download/{path}', [SubmissionController::class, 'downloadFile'])
     ->where('path', '.*') // Ceci dit à Laravel d'accepter TOUS les caractères (y compris les slashes) dans le paramètre {path}
