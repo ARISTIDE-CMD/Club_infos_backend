@@ -13,18 +13,55 @@ class StudentController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function index(Request $request)
-    {
-        $query = Student::with(['user','projects.submission.evaluation' ]);
+public function index(Request $request)
+{
+    $user = $request->user(); // utilisateur connecté
 
-        if ($request->has('class_group')) {
-            $query->where('class_group', $request->input('class_group'));
+    // Charger user, projects avec submission + evaluation, et le teacher associé
+    $query = Student::with(['user', 'projects.submission.evaluation', 'teacher.user']);
+
+    // Si admin, ne voit que ses étudiants
+    if ($user->role === 'admin') {
+        $teacher = $user->teacher;
+        if (!$teacher) {
+            return response()->json([
+                'message' => 'Aucun profil enseignant associé à cet utilisateur.'
+            ], 403);
         }
 
-        $students = $query->get();
-
-        return response()->json(['students' => $students]);
+        $query->where('teacher_id', $teacher->id);
     }
+
+    // Filtre par classe si demandé
+    if ($request->has('class_group')) {
+        $query->where('class_group', $request->input('class_group'));
+    }
+
+    $students = $query->get();
+
+    // Transformer les résultats pour ajouter le nom du teacher directement
+    $students = $students->map(function ($student) {
+        return [
+            'id' => $student->id,
+            'first_name' => $student->first_name,
+            'last_name' => $student->last_name,
+            'student_id' => $student->student_id,
+            'class_group' => $student->class_group,
+            'created_at' => $student->created_at,
+            'user' => $student->user,
+            'projects' => $student->projects,
+            'teacher_name' => $student->teacher ? $student->teacher->user->name : null,
+        ];
+    });
+
+    return response()->json([
+        'students' => $students,
+        'user_role' => $user->role,
+        'teacher_id' => $user->role === 'teacher' ? $user->teacher->id : null
+    ]);
+}
+
+
 
     /**
      * Display the specified resource.
@@ -59,32 +96,5 @@ class StudentController extends Controller
     ], 200);
 }
 
-
-// public function show($id)
-// {
-//     // Rechercher l'étudiant par student_id
-//     $student = Student::with(['user', 'assignments.project'])
-//         ->where('student_id', $id)
-//         ->first();
-
-//     if (!$student) {
-//         return response()->json(['message' => 'Étudiant non trouvé'], 404);
-//     }
-
-//     return response()->json(['student' => $student], 200);
-// }
-
-
-
-//     public function show($id)
-// {
-//     $student = Student::with(['user', 'projects'])->where('student_id', $id)->first();
-
-//     if (!$student) {
-//         return response()->json(['message' => 'Étudiant non trouvé'], 404);
-//     }
-
-//     return response()->json(['student' => $student], 200);
-// }
 
 }

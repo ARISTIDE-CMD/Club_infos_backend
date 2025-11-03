@@ -14,15 +14,23 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Créer un utilisateur administrateur de test
-        User::factory()->create([
-            'name' => 'Admin User',
-            'email' => 'admin@example.com',
-            'password' => Hash::make('password'),
-            'role' => 'admin',
-        ]);
+        // 🔹 Création du Super Admin principal
+        // User::factory()->create([
+        //     'name' => 'Super Admin',
+        //     'email' => 'superadmin@example.com',
+        //     'password' => Hash::make('password'),
+        //     'role' => 'superadmin',
+        // ]);
 
-        // Créer un utilisateur étudiant de test avec son profil associé
+        // 🔹 Création d’un utilisateur admin de test
+        // User::factory()->create([
+        //     'name' => 'Admin User',
+        //     'email' => 'admin@example.com',
+        //     'password' => Hash::make('password'),
+        //     'role' => 'admin',
+        // ]);
+
+        // 🔹 Création d’un étudiant avec son profil associé
         $studentUser = User::factory()->create([
             'name' => 'Test Student',
             'email' => 'student@example.com',
@@ -30,12 +38,24 @@ class DatabaseSeeder extends Seeder
             'role' => 'student',
         ]);
 
-        Student::create([
-            'user_id' => $studentUser->id,
-            'first_name' => 'Test',
-            'last_name' => 'Student',
-            'student_id' => 'ETU00001',
-            'class_group' => 'L1 Infos',
+       $teacher = \App\Models\Teacher::first(); // ou récupère le teacher spécifique que tu veux assigner
+
+Student::create([
+    'user_id' => $studentUser->id,
+    'first_name' => 'Test',
+    'last_name' => 'Student',
+    'student_id' => 'ETU00001',
+    'class_group' => 'L1 Infos',
+    'teacher_id' => $teacher ? $teacher->id : null, // assigne le teacher s'il existe
+]);
+
+
+        // 🔹 Appel du seeder des enseignants
+        $this->call([
+            TeacherSeeder::class, // ✅ Appel correct
+        ]);
+        $this->call([
+            SuperAdminSeeder::class, // ✅ Appel correct
         ]);
     }
 }

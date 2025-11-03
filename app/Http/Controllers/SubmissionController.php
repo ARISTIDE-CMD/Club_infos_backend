@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Submission;
 use Illuminate\Http\Request;
+use App\Models\Student;
 use Illuminate\Support\Facades\Storage;
+
 
 class SubmissionController extends Controller
 {
@@ -59,6 +61,8 @@ public function store(Request $request)
 
     // 4️⃣ Enregistrer le nouveau fichier
     $filePath = $request->file('file')->store('submissions', 'public');
+     $student = Student::where('user_id', auth()->id())->first();
+
 
     if ($existingSubmission) {
         // Supprimer l'ancien fichier si présent
@@ -68,6 +72,7 @@ public function store(Request $request)
 
         // Mettre à jour la soumission existante
         $existingSubmission->update([
+            'student_id'=>$student->id,
             'file_path' => $filePath,
         ]);
 
@@ -79,6 +84,7 @@ public function store(Request $request)
 
     // 5️⃣ Sinon, créer une nouvelle soumission
     $newSubmission = Submission::create([
+        'student_id'=>$student->id,
         'project_id' => $projectId,
         'file_path' => $filePath,
     ]);

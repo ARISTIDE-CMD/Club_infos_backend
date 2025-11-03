@@ -18,13 +18,19 @@ class Student extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [
-        'user_id',
-        'first_name',
-        'last_name',
-        'student_id',
-        'class_group',
-    ];
+   protected $fillable = [
+    'user_id',
+    'student_id',
+    'class_group',
+    'first_name',
+    'last_name',
+    'teacher_id', // ✅ nouveau champ
+];
+
+public function teacher()
+{
+    return $this->belongsTo(Teacher::class, 'teacher_id');
+}
 
     /**
      * Get the user that owns the student profile.

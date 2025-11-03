@@ -9,56 +9,70 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\EvaluationController;
 use App\Http\Controllers\ProjectMessageController;
+use App\Http\Controllers\SuperAdminController;
+use App\Http\Controllers\ChatController;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
-|
-*/
 
-// Public routes for authentication
+// Public routes
 Route::post('/login', [AuthController::class, 'login']);
-
-// Routes that require authentication
+Route::get('/superadmin/dashboard', [SuperAdminController::class, 'dashboard']);
+// Routes protégées
 Route::middleware('auth:sanctum')->group(function () {
-    // Admin routes
-    Route::post('/admin/students', [AdminController::class, 'store']);
-    Route::delete('/admin/students/{id}', [AdminController::class, 'destroy']);
-    Route::put('/admin/students/{id}', [AdminController::class, 'update']);
 
-    // Student and Admin routes
+
+    // ----- Super Admin -----
+    // Route::middleware('superadmin')->group(function () {
+
+        Route::post('/superadmin/categories', [SuperAdminController::class, 'storeCategory']);
+        Route::get('/superadmin/categories', [SuperAdminController::class, 'indexCategories']);
+        Route::get('/superadmin/admins', [SuperAdminController::class, 'indexAdmins']);
+        Route::post('/superadmin/admins', [SuperAdminController::class, 'createAdmin']);
+        Route::put('/superadmin/admins/{id}', [SuperAdminController::class, 'updateAdmin']);
+        Route::delete('/superadmin/admins/{id}', [SuperAdminController::class, 'deleteAdmin']);
+
+
+    // });
+
+    // ----- Admin -----
+    // Route::middleware('admin')->group(function () {
+        // Gestion des étudiants
+        Route::post('/admin/students', [AdminController::class, 'store']);
+        Route::put('/admin/students/{id}', [AdminController::class, 'update']);
+        Route::delete('/admin/students/{id}', [AdminController::class, 'destroy']);
+
+        // Projets créés par cet admin / ses étudiants
+        Route::post('/projects', [ProjectController::class, 'store']);
+        Route::patch('/projects/{id}', [ProjectController::class, 'update']);
+        Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
+
+        // Évaluations : l’admin n’évalue que ses étudiants
+        Route::post('/submissions/{submission}/evaluate', [EvaluationController::class, 'storeOrUpdate']);
+
+        // Messages de projets dont il est responsable
+    // });
+
+    // ----- Student -----
+    // Consultation
     Route::get('/students', [StudentController::class, 'index']);
     Route::get('/students/{id}', [StudentController::class, 'show']);
-    Route::post('/logout', [AuthController::class, 'logout']);
 
-    // Project routes
-    Route::get('/projects', [ProjectController::class, 'index']);
-     Route::get('/projects/{id}', [ProjectController::class, 'show']);
+    // Soumissions de projets
+    Route::post('/submissions', [SubmissionController::class, 'store']);
     Route::get('/results', [SubmissionController::class, 'index']);
-    Route::post('/projects', [ProjectController::class, 'store']);
-    Route::patch('/projects/{id}', [ProjectController::class, 'update']);
-    Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
+    Route::get('/download/{path}', [SubmissionController::class, 'downloadFile'])
+        ->where('path', '.*')
+        ->name('download.submission');
 
-    // Submission routes (for students)
-    Route::post('/submissions', [SubmissionController::class, 'store']); // New route for student project submissions
-    Route::get('/download/{filename}', [SubmissionController::class, 'downloadFile']);
-     Route::post('/submissions/{submission}/evaluate', [EvaluationController::class, 'storeOrUpdate']);
+    // Projets
+    Route::get('/projects', [ProjectController::class, 'index']);
+    Route::get('/projects/{id}', [ProjectController::class, 'show']);
 
-     //Appi pour chater
-        
+    // Project Messages / Chat
     Route::post('/projects/{project}/chat', [ChatController::class, 'sendMessage']);
-     //.....
-     Route::post('/projects/messages', [ProjectMessageController::class, 'store']);
-    });
-Route::get('/download/{path}', [SubmissionController::class, 'downloadFile'])
-->where('path', '.*') // Ceci dit à Laravel d'accepter TOUS les caractères (y compris les slashes) dans le paramètre {path}
-    ->name('download.submission');
-    Route::get('/students/{id}', [StudentController::class, 'show']);
+    Route::post('/projects/messages', [ProjectMessageController::class, 'store']);
+
+    // Déconnexion
+    Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/projects/{project}/messages', [ProjectMessageController::class, 'show']);
     Route::get('/admin/messages', [ProjectMessageController::class, 'index']);
-    //  Route::get('/projects/{project}/chat', [ChatController::class, 'showProjectChat']);
+});

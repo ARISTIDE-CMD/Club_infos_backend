@@ -16,7 +16,7 @@ class Submission extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        // 'student_id',
+        'student_id',
         'project_id',
         'file_path',
         // 'comment',

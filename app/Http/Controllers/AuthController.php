@@ -14,32 +14,35 @@ class AuthController extends Controller
      * Gère la connexion des utilisateurs (admin ou étudiant).
      */
     public function login(Request $request)
-    {
-        $credentials = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
-        ]);
+{
+    $request->validate([
+        'email' => 'required|email',
+        'password' => 'required',
+    ]);
 
-        if (Auth::attempt($credentials)) {
-            $user = Auth::user();
-            $token = $user->createToken('authToken')->plainTextToken;
-            $user->load('student'); // Charger la relation avec l'étudiant
+    $user = User::where('email', $request->email)->first();
 
-            return response()->json([
-                'token' => $token,
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'role' => $user->role,
-                    'student_id' => $user->student?->id // Ajouter l'ID de l'étudiant
-                    // 'idStudent'=> $user->student?->id // Ajouter l'ID de l'étudiant
-                ]
-            ]);
-        }
-
+    if (!$user || !Hash::check($request->password, $user->password)) {
         return response()->json(['message' => 'Identifiants invalides.'], 401);
     }
+
+    // Création du token API
+    $token = $user->createToken('authToken')->plainTextToken;
+
+    $user->load('student'); // Charger la relation étudiant
+
+    return response()->json([
+        'token' => $token,
+        'user' => [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $user->role,
+            'student_id' => $user->student?->id,
+        ]
+    ]);
+}
+
 
     /**
      * Enregistre un nouvel étudiant (réservé à l'administrateur).

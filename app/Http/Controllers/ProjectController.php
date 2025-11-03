@@ -11,144 +11,168 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
-
 class ProjectController extends Controller
 {
     /**
-     * Display a listing of the projects.
+     * Affiche les projets de tous les étudiants (ou seulement ceux de l'admin si admin).
      */
     public function index()
     {
-        $projects = Project::with('students.user')->get();
+        $user = Auth::user();
+
+        if ($user->role === 'admin') {
+            // Projets liés aux étudiants de cet admin
+            $studentIds = $user->teacher->students()->pluck('id');
+            $projects = Project::whereHas('students', fn($q) => $q->whereIn('students.id', $studentIds))
+                ->with('students.user')
+                ->get();
+        } else {
+            // Superadmin ou autres rôles voient tous les projets
+            $projects = Project::with('students.user')->get();
+        }
+
         return response()->json(['projects' => $projects]);
     }
+
     /**
-     * Display the specified project with its relations.
+     * Affiche un projet spécifique avec ses relations
      */
-public function show($id)
-{
-    // On récupère le projet avec toutes ses relations
-    $project = Project::with([
-        'students.user',             // les étudiants et leurs utilisateurs
-        'submissions.student.user',  // les soumissions + étudiant + utilisateur
-        'submissions.evaluations.user' // ⚡ les évaluations + évaluateur
-    ])->findOrFail($id);
+    public function show($id)
+    {
+        $user = Auth::user();
+        $project = Project::with(['students.user', 'submissions.student.user', 'submissions.evaluations.user'])
+            ->findOrFail($id);
 
-    // On renvoie le projet complet au format JSON
-    return response()->json([
-        'project' => $project
-    ]);
-}
+        // Restriction : admin ne voit que ses projets
+        if ($user->role === 'admin') {
+            $studentIds = $user->teacher->students()->pluck('id');
+            if (!$project->students->pluck('id')->intersect($studentIds)->count()) {
+                return response()->json(['message' => 'Accès refusé.'], 403);
+            }
+        }
 
+        return response()->json(['project' => $project]);
+    }
 
+    /**
+     * Création de projet
+     */
     public function store(Request $request)
     {
-        try {
-            // Case 1: Student submits a project with a file
-            if ($request->hasFile('file')) {
-                $user = Auth::user();
-                if (!$user || $user->role !== 'student') {
-                    return response()->json(['message' => 'Non autorisé. Seuls les étudiants peuvent soumettre des projets.'], 403);
-                }
+        $user = Auth::user();
 
-                // Validation pour la soumission d'étudiant
-                $request->validate([
-                    'title' => 'required|string|max:255',
-                    'description' => 'required|string',
-                    'file' => 'required|file|mimes:pdf,zip,doc,docx|max:10240', // Max 10MB
-                ]);
-
-                $student = Student::where('user_id', $user->id)->firstOrFail();
-
-                // Sauvegarde du fichier et création du projet
-                $path = $request->file('file')->store('public/projects');
-                $filePath = Storage::url($path);
-
-                $project = Project::create([
-                    'title' => $request->input('title'),
-                    'description' => $request->input('description'),
-                    'file_path' => $filePath,
-                ]);
-
-                // Lier le projet à l'étudiant
-                $student->projects()->attach($project->id);
-
-                return response()->json([
-                    'message' => 'Projet soumis avec succès.',
-                    'project' => $project,
-                ], 201);
+        // Étudiant : soumission
+        if ($request->hasFile('file')) {
+            if ($user->role !== 'student') {
+                return response()->json(['message' => 'Non autorisé.'], 403);
             }
 
-            // Case 2: Admin/Teacher assigns a project to students
-            $validatedData = $request->validate([
+            $request->validate([
+                'title' => 'required|string|max:255',
+                'description' => 'required|string',
+                'file' => 'required|file|mimes:pdf,zip,doc,docx|max:10240',
+            ]);
+
+            $student = Student::where('user_id', $user->id)->firstOrFail();
+            $path = $request->file('file')->store('public/projects');
+            $filePath = Storage::url($path);
+
+            $project = Project::create([
+                'title' => $request->input('title'),
+                'description' => $request->input('description'),
+                'file_path' => $filePath,
+            ]);
+
+            $student->projects()->attach($project->id);
+
+            return response()->json(['message' => 'Projet soumis avec succès.', 'project' => $project], 201);
+        }
+
+        // Admin/Teacher : création et assignation
+        if ($user->role === 'admin') {
+            $request->validate([
                 'title' => 'required|string|max:255',
                 'description' => 'required|string',
                 'student_ids' => 'required|array',
                 'student_ids.*' => 'exists:students,id',
             ]);
 
+            // Vérifier que les étudiants appartiennent à cet admin
+            $teacherStudentIds = $user->teacher->students()->pluck('id')->toArray();
+            foreach ($request->student_ids as $sid) {
+                if (!in_array($sid, $teacherStudentIds)) {
+                    return response()->json(['message' => 'Vous ne pouvez assigner que vos propres étudiants.'], 403);
+                }
+            }
+
             $project = Project::create([
-                'title' => $validatedData['title'],
-                'description' => $validatedData['description'],
+                'title' => $request->title,
+                'description' => $request->description,
             ]);
 
-            $project->students()->sync($validatedData['student_ids']);
+            $project->students()->sync($request->student_ids);
 
             return response()->json(['message' => 'Projet créé avec succès', 'project' => $project], 201);
-
-        } catch (ValidationException $e) {
-            return response()->json(['errors' => $e->errors()], 422);
-        } catch (\Exception $e) {
-            Log::error('Project submission failed: ' . $e->getMessage());
-            return response()->json(['message' => 'Une erreur est survenue lors de la soumission du projet.'], 500);
         }
+
+        return response()->json(['message' => 'Non autorisé.'], 403);
     }
 
     /**
-     * Update the specified project in storage.
+     * Mise à jour du projet
      */
     public function update(Request $request, $id)
     {
-        try {
-            $validatedData = $request->validate([
-                'title' => 'required|string|max:255',
-                'description' => 'required|string',
-                'student_ids' => 'array',
-                'student_ids.*' => 'exists:students,id',
-            ]);
+        $user = Auth::user();
+        $project = Project::findOrFail($id);
 
-            $project = Project::findOrFail($id);
-
-            $project->update([
-                'title' => $validatedData['title'],
-                'description' => $validatedData['description'],
-            ]);
-
-            if (isset($validatedData['student_ids'])) {
-                $project->students()->sync($validatedData['student_ids']);
+        if ($user->role === 'admin') {
+            // Vérification : admin ne peut modifier que ses projets
+            $studentIds = $user->teacher->students()->pluck('id');
+            if (!$project->students->pluck('id')->intersect($studentIds)->count()) {
+                return response()->json(['message' => 'Accès refusé.'], 403);
             }
-
-            return response()->json(['message' => 'Projet mis à jour avec succès']);
-        } catch (ValidationException $e) {
-            return response()->json(['errors' => $e->errors()], 422);
-        } catch (\Exception $e) {
-            return response()->json(['message' => 'Erreur lors de la mise à jour du projet.'], 500);
         }
+
+        $validatedData = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'student_ids' => 'array',
+            'student_ids.*' => 'exists:students,id',
+        ]);
+
+        $project->update([
+            'title' => $validatedData['title'],
+            'description' => $validatedData['description'],
+        ]);
+
+        if (isset($validatedData['student_ids']) && $user->role === 'admin') {
+            // Ne peut assigner que ses propres étudiants
+            $teacherStudentIds = $user->teacher->students()->pluck('id')->toArray();
+            $validIds = array_intersect($validatedData['student_ids'], $teacherStudentIds);
+            $project->students()->sync($validIds);
+        }
+
+        return response()->json(['message' => 'Projet mis à jour avec succès']);
     }
 
     /**
-     * Remove the specified project from storage.
+     * Suppression du projet
      */
     public function destroy($id)
     {
-        $project = Project::find($id);
+        $user = Auth::user();
+        $project = Project::findOrFail($id);
 
-        if (!$project) {
-            return response()->json(['message' => 'Projet non trouvé.'], 404);
+        if ($user->role === 'admin') {
+            $studentIds = $user->teacher->students()->pluck('id');
+            if (!$project->students->pluck('id')->intersect($studentIds)->count()) {
+                return response()->json(['message' => 'Accès refusé.'], 403);
+            }
         }
 
         $project->delete();
 
-        return response()->json(['message' => 'Projet supprimé avec succès.']);
+        return response()->json(['message' => 'Projet supprimé avec succès']);
     }
 }

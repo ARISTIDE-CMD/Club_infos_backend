@@ -10,15 +10,12 @@ use Laravel\Sanctum\HasApiTokens;
 use App\Models\Student;
 use App\Models\Project;
 use App\Models\Message;
+use App\Models\Teacher;
 
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    /**
-     * Les attributs qui peuvent être assignés en masse.
-     * @var array<int, string>
-     */
     protected $fillable = [
         'name',
         'email',
@@ -26,52 +23,55 @@ class User extends Authenticatable
         'role',
     ];
 
-    /**
-     * Les attributs qui doivent être cachés lors de la sérialisation.
-     * @var array<int, string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Les attributs qui doivent être castés.
-     * @var array<string, string>
-     */
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
 
-    /**
-     * Obtenir l'étudiant associé à cet utilisateur.
-     */
+    // --- Relations existantes ---
     public function student()
     {
         return $this->hasOne(Student::class);
     }
 
-    /**
-     * Obtenir les attributions de projet de l'utilisateur (via son profil étudiant).
-     */
     public function assignments()
     {
         return $this->hasManyThrough(Project::class, Student::class);
     }
 
-    /**
-     * Obtenir les messages envoyés par l'utilisateur.
-     */
     public function sentMessages()
     {
         return $this->hasMany(Message::class, 'sender_id');
     }
 
-    /**
-     * Obtenir les messages reçus par l'utilisateur.
-     */
     public function receivedMessages()
     {
         return $this->hasMany(Message::class, 'receiver_id');
+    }
+
+    // --- Nouvelle relation pour les profs (admins) ---
+    public function teacher()
+    {
+        return $this->hasOne(Teacher::class);
+    }
+
+    // --- Helpers pour les rôles ---
+    public function isSuperAdmin()
+    {
+        return $this->role === 'superadmin'; // ⚠️ minuscule pour cohérence
+    }
+
+    public function isAdmin()
+    {
+        return $this->role === 'admin';
+    }
+
+    public function isStudent()
+    {
+        return $this->role === 'student';
     }
 }
