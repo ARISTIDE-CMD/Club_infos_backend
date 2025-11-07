@@ -1,33 +1,25 @@
-# Image PHP officielle avec Apache
-FROM php:8.2-apache
+# Image PHP CLI
+FROM php:8.2-cli
 
-# Installe les extensions PHP nécessaires
-RUN apt-get update && apt-get install -y \
-    libzip-dev unzip git curl \
+# Installer dépendances système
+RUN apt-get update && apt-get install -y unzip git libzip-dev \
     && docker-php-ext-install pdo pdo_mysql zip
 
-# Active mod_rewrite pour Apache
-RUN a2enmod rewrite
+# Définir le répertoire de travail
+WORKDIR /app
 
-# Copie les fichiers du projet
-COPY . /var/www/html
+# Copier le code
+COPY . .
 
-# Définit le répertoire de travail
-WORKDIR /var/www/html
-
-# Installe Composer
+# Installer Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
-# Installe les dépendances Laravel
 RUN composer install --no-dev --optimize-autoloader
 
-# Donne les droits au dossier storage et bootstrap/cache
+# Droits pour storage et bootstrap/cache
 RUN chown -R www-data:www-data storage bootstrap/cache
 
-# Expose le port 8080 (Render)
-EXPOSE 8080
+# Exposer le port attendu par Render
+EXPOSE 10000
 
-# Commande de démarrage
-CMD bash -c "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT"
-
-
+# Commande de démarrage : migrations + serveur Laravel
+CMD bash -c "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT}"
