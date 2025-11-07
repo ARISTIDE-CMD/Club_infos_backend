@@ -28,5 +28,6 @@ RUN chown -R www-data:www-data storage bootstrap/cache
 EXPOSE 8080
 
 # Commande de démarrage
-CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT
+CMD bash -c "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT"
+
 
