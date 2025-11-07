@@ -11,15 +11,25 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('students', function (Blueprint $table) {
-            $table->id();
-            $table->foreign('teacher_id')->references('id')->on('teachers')->onDelete('cascade');
-            $table->string('first_name');
-            $table->string('last_name');
-            $table->string('student_id')->unique(); // ID spécifique à l'étudiant si besoin
-            $table->string('class_group');
-            $table->timestamps();
-        });
+       Schema::create('students', function (Blueprint $table) {
+    $table->id();
+    $table->string('first_name');
+    $table->string('last_name');
+    $table->string('student_id');
+    $table->string('class_group');
+
+    // Ajoute la colonne teacher_id
+    $table->unsignedBigInteger('teacher_id');
+
+    // Définis la clé étrangère
+    $table->foreign('teacher_id')
+          ->references('id')
+          ->on('teachers')
+          ->onDelete('cascade');
+
+    $table->timestamps();
+});
+
     }
 
     /**
