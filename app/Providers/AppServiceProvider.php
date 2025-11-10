@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Schema; 
 use App\Models\User; // Ajoutez cette ligne pour importer le modèle User
 use App\Models\Project;
 use App\Observers\ProjectObserver;
