@@ -2,12 +2,12 @@
 # Dockerfile Laravel optimisé
 # -------------------------------
 
-# 1️⃣ Image PHP CLI officielle (Laravel API + Artisan Serve)
+# 1️⃣ Image PHP CLI officielle
 FROM php:8.2-cli
 
 # 2️⃣ Installer dépendances système + extensions PHP
-RUN apt-get update && apt-get install -y unzip git libzip-dev curl \
-    && docker-php-ext-install pdo pdo_mysql zip
+RUN apt-get update && apt-get install -y unzip git libzip-dev curl libpq-dev \
+    && docker-php-ext-install pdo pdo_mysql pdo_pgsql zip
 
 # 3️⃣ Définir le répertoire de travail
 WORKDIR /app
