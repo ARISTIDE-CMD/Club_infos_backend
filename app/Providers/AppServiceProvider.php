@@ -39,5 +39,7 @@ class AppServiceProvider extends ServiceProvider
             ->prefix('api')
             ->group(base_path('routes/api.php'));
         Project::observe(ProjectObserver::class);
+
+        Schema::defaultStringLength(191);
     }
 }
