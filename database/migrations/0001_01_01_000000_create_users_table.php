@@ -14,8 +14,8 @@ return new class extends Migration
         // Table users
         Schema::create('users', function (Blueprint $table) {
             $table->bigIncrements('id'); // évite les problèmes de unsigned
-            $table->string('name')->unique();
-            $table->string('email'); // tu peux réactiver unique ici sans souci
+            $table->string('name');
+            $table->string('email')->unique(); // tu peux réactiver unique ici sans souci
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
