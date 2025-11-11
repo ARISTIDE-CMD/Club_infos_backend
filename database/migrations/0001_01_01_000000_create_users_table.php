@@ -25,8 +25,8 @@ return new class extends Migration
 
         // Table password_reset_tokens
         Schema::create('password_reset_tokens', function (Blueprint $table) {
-            $table->bigIncrements('id'); // Ajoute une clé primaire explicite (PostgreSQL l’aime bien)
-            $table->string('email');
+            // $table->bigIncrements('id'); // Ajoute une clé primaire explicite (PostgreSQL l’aime bien)
+            $table->string('email')->primary();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
         });
