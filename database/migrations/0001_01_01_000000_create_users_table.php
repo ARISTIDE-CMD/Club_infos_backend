@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Table users
+        // ===== TABLE USERS =====
         Schema::create('users', function (Blueprint $table) {
-            $table->bigIncrements('id'); // évite les problèmes de unsigned
+            $table->bigIncrements('id'); // Compatible PostgreSQL
             $table->string('name');
-            $table->string('email')->unique(); // tu peux réactiver unique ici sans souci
+            $table->string('email');//->unique(); // OK pour PostgreSQL
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
@@ -23,25 +23,28 @@ return new class extends Migration
             $table->string('role')->default('student');
         });
 
-        // Table password_reset_tokens
+        // ===== TABLE PASSWORD_RESET_TOKENS =====
         Schema::create('password_reset_tokens', function (Blueprint $table) {
-            // $table->bigIncrements('id'); // Ajoute une clé primaire explicite (PostgreSQL l’aime bien)
-            $table->string('email');
+            $table->bigIncrements('id'); // ✅ clé primaire obligatoire pour PostgreSQL
+            $table->string('email')->index(); // index pour la recherche
             $table->string('token');
             $table->timestamp('created_at')->nullable();
         });
 
-        // Table sessions
+        // ===== TABLE SESSIONS =====
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();
-            $table->unsignedBigInteger('user_id')->nullable()->index(); // correspond à bigIncrements
+            $table->unsignedBigInteger('user_id')->nullable()->index();
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
             $table->longText('payload');
             $table->integer('last_activity')->index();
 
-            // Optionnel : si tu veux la contrainte FK
-            // $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            // ✅ Optionnel mais recommandé : contrainte d’intégrité
+            $table->foreign('user_id')
+                ->references('id')
+                ->on('users')
+                ->onDelete('cascade');
         });
     }
 
