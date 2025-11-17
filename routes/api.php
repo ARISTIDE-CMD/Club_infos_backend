@@ -53,7 +53,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ----- Student -----
     // Consultation
-    Route::get('/students', [StudentController::class, 'index']);
+
+
     Route::get('/students/{id}', [StudentController::class, 'show']);
 
     // Soumissions de projets
@@ -76,3 +77,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/projects/{project}/messages', [ProjectMessageController::class, 'show']);
     Route::get('/admin/messages', [ProjectMessageController::class, 'index']);
 });
+ Route::get('/students/index-typesense', [StudentController::class, 'indexStudentsInTypesense']);
+   Route::get('/students', [StudentController::class, 'index']);

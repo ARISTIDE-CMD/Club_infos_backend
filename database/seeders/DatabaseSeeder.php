@@ -30,32 +30,33 @@ class DatabaseSeeder extends Seeder
         //     'role' => 'admin',
         // ]);
 
+        // ou récupère le teacher spécifique que tu veux assigner
         // 🔹 Création d’un étudiant avec son profil associé
-        $studentUser = User::factory()->create([
-            'name' => 'Test Student',
-            'email' => 'student@example.com',
-            'password' => Hash::make('password'),
-            'role' => 'student',
-        ]);
-
-       $teacher = \App\Models\Teacher::first(); // ou récupère le teacher spécifique que tu veux assigner
-
-Student::create([
-    'user_id' => $studentUser->id,
-    'first_name' => 'Test',
-    'last_name' => 'Student',
-    'student_id' => 'ETU00001',
-    'class_group' => 'L1 Infos',
-    'teacher_id' => $teacher ? $teacher->id : null, // assigne le teacher s'il existe
-]);
+      for ($i = 1; $i <= 100; $i++) {
+    $studentUser = User::factory()->create([
+        'name' => "Test Student $i",
+        'email' => "student{$i}_" . uniqid() . "@example.com",
+        'password' => Hash::make('password'),
+        'role' => 'student',
+    ]);
+$teacher = \App\Models\Teacher::first();
+    Student::create([
+        'user_id' => $studentUser->id,
+        'first_name' => 'Test',
+        'last_name' => "Student $i",
+        'student_id' => 'ETU' . str_pad($i, 5, '0', STR_PAD_LEFT),
+        'class_group' => 'L1 Infos',
+        'teacher_id' => $teacher ? $teacher->id : null,
+    ]);
+}
 
 
         // 🔹 Appel du seeder des enseignants
-        $this->call([
-            TeacherSeeder::class, // ✅ Appel correct
-        ]);
-        $this->call([
-            SuperAdminSeeder::class, // ✅ Appel correct
-        ]);
+        // $this->call([
+        //     TeacherSeeder::class, // ✅ Appel correct
+        // ]);
+        // $this->call([
+        //     SuperAdminSeeder::class, // ✅ Appel correct
+        // ]);
     }
 }
