@@ -41,7 +41,7 @@ class DatabaseSeeder extends Seeder
     ]);
 $teacher = \App\Models\Teacher::first();
     Student::create([
-        'user_id' => $studentUser->id,
+        // 'user_id' => $studentUser->id,
         'first_name' => 'Test',
         'last_name' => "Student $i",
         'student_id' => 'ETU' . str_pad($i, 5, '0', STR_PAD_LEFT),
@@ -52,11 +52,11 @@ $teacher = \App\Models\Teacher::first();
 
 
         // 🔹 Appel du seeder des enseignants
-        // $this->call([
-        //     TeacherSeeder::class, // ✅ Appel correct
-        // ]);
-        // $this->call([
-        //     SuperAdminSeeder::class, // ✅ Appel correct
-        // ]);
+        $this->call([
+            TeacherSeeder::class, // ✅ Appel correct
+        ]);
+        $this->call([
+            SuperAdminSeeder::class, // ✅ Appel correct
+        ]);
     }
 }

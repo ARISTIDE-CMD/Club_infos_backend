@@ -6,29 +6,30 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up()
-{
-    Schema::table('students', function (Blueprint $table) {
-        $table->dropForeign(['teacher_id']); // ❌ enlève l'ancienne contrainte
-        $table->foreign('teacher_id')
-              ->references('id')
-              ->on('teachers')
-              ->onDelete('cascade'); // ✅ crée la bonne relation
-    });
-}
+    {
+        Schema::table('students', function (Blueprint $table) {
+            // Ajouter la colonne teacher_id si elle n'existe pas
+            if (!Schema::hasColumn('students', 'teacher_id')) {
+                $table->unsignedBigInteger('teacher_id')->nullable();
+            }
 
-public function down()
-{
-    Schema::table('students', function (Blueprint $table) {
-        $table->dropForeign(['teacher_id']);
-        $table->foreign('teacher_id')
-              ->references('id')
-              ->on('users')
-              ->onDelete('cascade');
-    });
-}
+            // Ajouter la clé étrangère
+            $table->foreign('teacher_id')
+                  ->references('id')
+                  ->on('teachers')
+                  ->onDelete('cascade');
+        });
+    }
 
+    public function down()
+    {
+        Schema::table('students', function (Blueprint $table) {
+            // Supprimer la clé étrangère
+            $table->dropForeign(['teacher_id']);
+
+            // Supprimer la colonne
+            $table->dropColumn('teacher_id');
+        });
+    }
 };

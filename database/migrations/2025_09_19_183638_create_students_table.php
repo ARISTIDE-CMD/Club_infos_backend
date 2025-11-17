@@ -19,19 +19,19 @@ return new class extends Migration
     $table->string('class_group');
 
     // Ajoute la colonne teacher_id
-    $table->unsignedBigInteger('teacher_id');
+    // $table->unsignedBigInteger('teacher_id');
 
-    // Définis la clé étrangère
-    $table->foreign('teacher_id')
-          ->references('id')
-          ->on('teachers')
-          ->onDelete('cascade');
+    // // Définis la clé étrangère
+    // $table->foreign('teacher_id')
+    //       ->references('id')
+    //       ->on('teachers')
+    //       ->onDelete('cascade');
 
     $table->timestamps();
 });
 
     }
-
+// database/migrations/2025_09_19_183638_create_students_table.php
     /**
      * Reverse the migrations.
      */
