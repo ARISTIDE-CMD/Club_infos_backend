@@ -15,6 +15,7 @@ use App\Http\Controllers\ChatController;
 
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
+ Route::get('/superadmin/categories', [SuperAdminController::class, 'indexCategories']);
 Route::get('/superadmin/dashboard', [SuperAdminController::class, 'dashboard']);
 // Routes protégées
 Route::middleware('auth:sanctum')->group(function () {
@@ -24,7 +25,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route::middleware('superadmin')->group(function () {
 
         Route::post('/superadmin/categories', [SuperAdminController::class, 'storeCategory']);
-        Route::get('/superadmin/categories', [SuperAdminController::class, 'indexCategories']);
+       
         Route::get('/superadmin/admins', [SuperAdminController::class, 'indexAdmins']);
         Route::post('/superadmin/admins', [SuperAdminController::class, 'createAdmin']);
         Route::put('/superadmin/admins/{id}', [SuperAdminController::class, 'updateAdmin']);
@@ -56,7 +57,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
     Route::get('/students/{id}', [StudentController::class, 'show']);
-
+ Route::get('/students', [StudentController::class, 'index']);
     // Soumissions de projets
     Route::post('/submissions', [SubmissionController::class, 'store']);
     Route::get('/results', [SubmissionController::class, 'index']);
@@ -78,4 +79,4 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/messages', [ProjectMessageController::class, 'index']);
 });
  Route::get('/students/index-typesense', [StudentController::class, 'indexStudentsInTypesense']);
-   Route::get('/students', [StudentController::class, 'index']);
+  
