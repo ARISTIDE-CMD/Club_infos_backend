@@ -1,0 +1,18 @@
+{
+  "functions": {
+    "api/index.php": {
+      "runtime": "vercel-php@0.6.0"
+    }
+  },
+  "routes": [
+    {
+      "src": "/(build|composer\\.(json|lock)|config|database|resources|routes|storage|tests|vendor|nova|composer\\.phar|\\.env|\\.git.*|\\.idea|\\.vscode|vercel\\.json)",
+      "dest": "/api/index.php",
+      "status": 404
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.php"
+    }
+  ]
+}
