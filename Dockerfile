@@ -22,9 +22,15 @@ WORKDIR /var/www/html
 COPY --from=builder /app /var/www/html
 
 # Mettre à jour les dépendances de production (si nécessaire) et nettoyer
-RUN apt-get update && apt-get install -y libpq-dev \
+# Stage Final (Stage 1)
+# ...
+
+# 4️⃣ Réinstaller les dépendances système et les extensions PHP nécessaires DANS CE STAGE
+RUN apt-get update && apt-get install -y libpq-dev libmysqlclient-dev \
+    && docker-php-ext-install pdo pdo_mysql \
     && rm -rf /var/lib/apt/lists/*
 
+# ...
 # Configurer Apache pour pointer vers le dossier public de Laravel
 # Note : Vous aurez besoin de créer un fichier de configuration Apache (e.g., 000-default.conf)
 # pour définir le DocumentRoot à /var/www/html/public.
