@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use App\Models\Student;
 use App\Services\TypesenseService;
 use App\Models\Project;
-use Typesense\Client;
 class StudentController extends Controller
 {
     /**
@@ -30,7 +29,7 @@ public function index(Request $request)
             ], 403);
         }
 
-        $query->where('teacher_id', $teacher->id);
+        // $query->where('teacher_id', $teacher->id);
     }
 
     // Filtre par classe si demandé
@@ -62,9 +61,13 @@ public function index(Request $request)
     ]);
 }
 
+public function search(Request $request, TypesenseService $ts) {
+  $q = $request->input('q');
+  $results = $ts->searchStudents($q, $request->all()); // implémenter searchStudents
+  return response()->json($results);
+}
 
-
-public function indexStudentsInTypesense(Request $request)
+public function indexStudentsInTypesense(Request $request, TypesenseService $typesenseService)
 {
     // 1️⃣ Récupérer les étudiants comme dans ton index existant
     $user = $request->user();
@@ -87,55 +90,25 @@ public function indexStudentsInTypesense(Request $request)
 
     $students = $query->get();
 
-    // 2️⃣ Préparer Typesense client
-    $client = new Client([
-        'api_key' => env('TYPESENSE_API_KEY'),
-        'nodes' => [
-            [
-                'host' => env('TYPESENSE_HOST'), // ex: localhost
-                'port' => env('TYPESENSE_PORT'), // ex: 8108
-                'protocol' => env('TYPESENSE_PROTOCOL', 'http')
-            ]
-        ],
-        'connection_timeout_seconds' => 2
-    ]);
-
-    // 3️⃣ Définir le schéma Typesense
-    $schema = [
-        'name' => 'students',
-        'fields' => [
-            ['name' => 'id', 'type' => 'string'],
-            ['name' => 'first_name', 'type' => 'string'],
-            ['name' => 'last_name', 'type' => 'string'],
-            ['name' => 'student_id', 'type' => 'string'],
-            ['name' => 'class_group', 'type' => 'string'],
-            ['name' => 'teacher_name', 'type' => 'string'],
-        ],
-        'default_sorting_field' => 'student_id'
-    ];
-
-    // 4️⃣ Créer la collection si elle n'existe pas
-    try {
-        $client->collections['students']->retrieve();
-    } catch (\Exception $e) {
-        $client->collections->create($schema);
-    }
-
-    // 5️⃣ Indexer les étudiants
-    foreach ($students as $student) {
-        $client->collections['students']->documents->upsert([
-            'id' => (string)$student->id,
+    // Transformer les étudiants en tableaux simples adaptés à Typesense
+    $studentsArray = $students->map(function ($student) {
+        return [
+            'id' => $student->id,
             'first_name' => $student->first_name,
             'last_name' => $student->last_name,
             'student_id' => $student->student_id,
             'class_group' => $student->class_group,
+            'teacher_id' => $student->teacher_id ?? null,
             'teacher_name' => $student->teacher ? $student->teacher->user->name : null,
-        ]);
-    }
+        ];
+    })->toArray();
+
+    // Déléguer l'indexation au service centralisé
+    $typesenseService->indexStudents($studentsArray);
 
     return response()->json([
         'message' => 'Étudiants indexés dans Typesense avec succès.',
-        'count' => $students->count()
+        'count' => count($studentsArray)
     ]);
 }
 

@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Schema;
 use App\Models\User; // Ajoutez cette ligne pour importer le modèle User
 use App\Models\Project;
 use App\Observers\ProjectObserver;
+use App\Console\Commands\TypesenseIndexStudents;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -17,7 +18,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Enregistrer les commandes artisan personnalisées
+        $this->commands([
+            TypesenseIndexStudents::class,
+        ]);
     }
 
     /**

@@ -40,7 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/admin/students', [AdminController::class, 'store']);
         Route::put('/admin/students/{id}', [AdminController::class, 'update']);
         Route::delete('/admin/students/{id}', [AdminController::class, 'destroy']);
-
+        Route::get('search/students', [\App\Http\Controllers\StudentSearchController::class, 'search']);
         // Projets créés par cet admin / ses étudiants
         Route::post('/projects', [ProjectController::class, 'store']);
         Route::patch('/projects/{id}', [ProjectController::class, 'update']);
@@ -77,6 +77,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/projects/{project}/messages', [ProjectMessageController::class, 'show']);
     Route::get('/admin/messages', [ProjectMessageController::class, 'index']);
+    Route::get('/students/index-typesense', [StudentController::class, 'indexStudentsInTypesense']);
 });
- Route::get('/students/index-typesense', [StudentController::class, 'indexStudentsInTypesense']);
   

@@ -1,6 +1,6 @@
 <?php
 return [
-    'api_key' => env('TYPESENSE_API_KEY', 'aris12345'), // Remplace 'xyz' par ta clé
+    'api_key' => env('TYPESENSE_API_KEY', 'xyz'), // Remplace 'xyz' par ta clé
     'nodes' => [
         [
             'host' => env('TYPESENSE_HOST', 'localhost'),
