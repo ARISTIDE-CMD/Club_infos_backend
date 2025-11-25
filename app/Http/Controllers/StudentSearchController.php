@@ -21,10 +21,14 @@ class StudentSearchController extends Controller
         }
 
         $options = [
-            'query_by' => $request->query('query_by', 'first_name,last_name'),
-            'per_page' => (int)$request->query('per_page', 50),
-            'page' => (int)$request->query('page', 1),
-        ];
+    'query_by' => $request->query('query_by', 'first_name,last_name,class_group'),
+    'per_page' => (int)$request->query('per_page', 50),
+    'page' => (int)$request->query('page', 1),
+    // Ajoute ces deux lignes :
+    'prefix' => $request->query('prefix', 'true'), // active le prefix search
+    'max_candidates' => (int)$request->query('max_candidates', 10), // pour typo / prefix
+];
+
 
         if ($request->has('filter_by')) {
             $options['filter_by'] = $request->query('filter_by');

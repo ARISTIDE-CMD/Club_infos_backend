@@ -97,7 +97,7 @@ class TypesenseService
     {
         $params = [
             'q' => $q,
-            'query_by' => $options['query_by'] ?? 'first_name,last_name',
+            'query_by' => $options['query_by'] ?? 'first_name,last_name,class_group',
             'per_page' => $options['per_page'] ?? 10,
             'page' => $options['page'] ?? 1,
         ];
@@ -113,5 +113,44 @@ class TypesenseService
         $response = $this->client->collections['students']->documents->search($params);
 
         return is_array($response) ? $response : (array)$response;
+    }
+
+    /**
+     * Upsert a single student document into Typesense.
+     * @param array $doc
+     * @return void
+     */
+    public function upsertStudent(array $doc): void
+    {
+        // normalize and remove nulls
+        $doc['id'] = (string)($doc['id'] ?? '');
+        if (isset($doc['teacher_id'])) {
+            $doc['teacher_id'] = is_numeric($doc['teacher_id']) ? (int)$doc['teacher_id'] : null;
+        }
+
+        $doc = array_filter($doc, function ($v) { return !is_null($v); });
+
+        if (empty($doc) || !isset($doc['id']) || $doc['id'] === '') {
+            return;
+        }
+
+        $this->client->collections['students']->documents->upsert($doc);
+    }
+
+    /**
+     * Delete a student document by id
+     * @param string $id
+     * @return void
+     */
+    public function deleteStudent(string $id): void
+    {
+        if ($id === '') return;
+
+        try {
+            $this->client->collections['students']->documents[$id]->delete();
+        } catch (\Exception $e) {
+            // rethrow to let caller handle logging if desired
+            throw $e;
+        }
     }
 }

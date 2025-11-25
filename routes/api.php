@@ -11,6 +11,7 @@ use App\Http\Controllers\EvaluationController;
 use App\Http\Controllers\ProjectMessageController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\StudentSearchController;
 
 
 // Public routes
@@ -40,7 +41,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/admin/students', [AdminController::class, 'store']);
         Route::put('/admin/students/{id}', [AdminController::class, 'update']);
         Route::delete('/admin/students/{id}', [AdminController::class, 'destroy']);
-        Route::get('search/students', [\App\Http\Controllers\StudentSearchController::class, 'search']);
+        Route::get('search/students', [StudentSearchController::class, 'search']);
         // Projets créés par cet admin / ses étudiants
         Route::post('/projects', [ProjectController::class, 'store']);
         Route::patch('/projects/{id}', [ProjectController::class, 'update']);

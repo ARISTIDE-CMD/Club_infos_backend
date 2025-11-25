@@ -10,6 +10,8 @@ use App\Models\User; // Ajoutez cette ligne pour importer le modèle User
 use App\Models\Project;
 use App\Observers\ProjectObserver;
 use App\Console\Commands\TypesenseIndexStudents;
+use App\Models\Student;
+use App\Observers\StudentObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -44,7 +46,9 @@ class AppServiceProvider extends ServiceProvider
             ->prefix('api')
             ->group(base_path('routes/api.php'));
         Project::observe(ProjectObserver::class);
-
+        Student::observe(StudentObserver::class);
         Schema::defaultStringLength(191);
+
+         Student::observe(StudentObserver::class);
     }
 }
