@@ -21,7 +21,7 @@ class TypesenseService
                 ['name' => 'first_name', 'type' => 'string'],
                 ['name' => 'last_name', 'type' => 'string'],
                 ['name' => 'student_id', 'type' => 'string'],
-                ['name' => 'class_group', 'type' => 'string'],
+                ['name' => 'class_group', 'type' => 'string','facet'=>true],
                 ['name' => 'teacher_id', 'type' => 'int64'],
                 ['name' => 'teacher_name', 'type' => 'string'],
             ],
