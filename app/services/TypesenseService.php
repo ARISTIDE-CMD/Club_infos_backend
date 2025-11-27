@@ -97,7 +97,7 @@ class TypesenseService
     {
         $params = [
             'q' => $q,
-            'query_by' => $options['query_by'] ?? 'first_name,last_name,class_group',
+            'query_by' => $options['query_by'] ?? 'first_name,last_name,class_group,student_id',
             'per_page' => $options['per_page'] ?? 10,
             'page' => $options['page'] ?? 1,
         ];

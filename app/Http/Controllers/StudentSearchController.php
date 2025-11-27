@@ -21,7 +21,7 @@ class StudentSearchController extends Controller
         }
 
         $options = [
-    'query_by' => $request->query('query_by', 'first_name,last_name,class_group'),
+    'query_by' => $request->query('query_by', 'first_name,last_name,class_group,student_id'),
     'per_page' => (int)$request->query('per_page', 50),
     'page' => (int)$request->query('page', 1),
     // Ajoute ces deux lignes :
