@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  typesense:
+    image: typesense/typesense:29.0
+    container_name: typesense
+    restart: unless-stopped
+    ports:
+      - "8108:8108"
+    volumes:
+      - ./data:/data
+      - ./analytics-data:/analytics-data
+    command: >
+      --data-dir=/data
+      --api-key=xyz
+      --enable-search-analytics=true
+      --analytics-dir=/analytics-data
+      --analytics-flush-interval=60

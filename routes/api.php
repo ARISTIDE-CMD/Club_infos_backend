@@ -12,12 +12,17 @@ use App\Http\Controllers\ProjectMessageController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\StudentSearchController;
-
+use App\Http\Controllers\ListController;
 
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
  Route::get('/superadmin/categories', [SuperAdminController::class, 'indexCategories']);
 Route::get('/superadmin/dashboard', [SuperAdminController::class, 'dashboard']);
+Route::get('/list', [ListController::class, 'getLimitedList']);
+Route::get('/analytics/searches', function () {
+    return app(\App\Services\TypesenseService::class)->getAnalytics();
+});
+
 // Routes protégées
 Route::middleware('auth:sanctum')->group(function () {
 

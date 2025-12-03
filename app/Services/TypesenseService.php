@@ -93,27 +93,72 @@ class TypesenseService
      * @param array $options Supported keys: query_by, per_page, page, filter_by, sort_by
      * @return array Typesense response
      */
-    public function searchStudents(string $q, array $options = []): array
-    {
-        $params = [
-            'q' => $q,
-            'query_by' => $options['query_by'] ?? 'first_name,last_name,class_group,student_id',
-            'per_page' => $options['per_page'] ?? 10,
-            'page' => $options['page'] ?? 1,
+   public function searchStudents(string $q, array $options = []): array
+{
+    $params = [
+        'q' => $q,
+        'query_by' => $options['query_by'] ?? 'first_name,last_name,class_group,student_id',
+        'per_page' => $options['per_page'] ?? 10,
+        'page' => $options['page'] ?? 1,
+
+        // 🔥 Active l’analytics Typesense
+        'include_fields' => '*', 
+        'analytics' => true,
+        'analytics_query' => $q, // optionnel mais conseillé
+    ];
+
+    if (!empty($options['filter_by'])) {
+        $params['filter_by'] = $options['filter_by'];
+    }
+
+    if (!empty($options['sort_by'])) {
+        $params['sort_by'] = $options['sort_by'];
+    }
+
+    $response = $this->client->collections['students']->documents->search($params);
+
+    return is_array($response) ? $response : (array)$response;
+}
+
+
+/**
+ * Récupère les recherches récentes et statistiques depuis Typesense
+ *
+ * @param array $params - options possibles : from_date, to_date, dimensions
+ * @return array
+ */
+public function getAnalytics(array $params = []): array
+{
+    try {
+        $defaultParams = [
+            'from_date'  => $params['from_date'] ?? date('Y-m-d', strtotime('-7 days')),
+            'to_date'    => $params['to_date'] ?? date('Y-m-d'),
+            'dimensions' => $params['dimensions'] ?? 'queries',
         ];
 
-        if (!empty($options['filter_by'])) {
-            $params['filter_by'] = $options['filter_by'];
-        }
+        return $this->client->analytics->retrieve($defaultParams);
 
-        if (!empty($options['sort_by'])) {
-            $params['sort_by'] = $options['sort_by'];
-        }
+    } catch (\Exception $e) {
+        // 1. Loggez l'erreur détaillée pour le développeur (essentiel)
+        logger()->error('Typesense Analytics Error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
 
-        $response = $this->client->collections['students']->documents->search($params);
-
-        return is_array($response) ? $response : (array)$response;
+        // 2. Relancez l'exception ou une nouvelle exception personnalisée.
+        // Cela permet au gestionnaire d'exceptions global du framework 
+        // de générer une réponse HTTP d'erreur correcte (ex: 500 ou 503 Service Unavailable).
+        
+        throw new \Exception('Impossible de récupérer les analytics Typesense: ' . $e->getMessage());
+        
+        // Alternative plus idiomatique (si vous voulez forcer un statut HTTP spécifique, ex: 503) :
+        // throw new \Symfony\Component\HttpKernel\Exception\ServiceUnavailableHttpException(
+        //     retryAfter: null, 
+        //     message: 'Service d\'analyse Typesense indisponible.', 
+        //     previous: $e
+        // );
     }
+}
+
+
+
 
     /**
      * Upsert a single student document into Typesense.
